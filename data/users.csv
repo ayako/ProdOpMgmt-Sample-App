@@ -9,3 +9,4 @@ user_id,username,email,role,factory_id,status,created_at,updated_at
 8,中村雄介,nakamura@company.com,計画担当者,,有効,2023-01-20 09:00:00,2023-01-20 09:00:00
 9,小林真理,kobayashi@factory4.com,工場管理者,4,有効,2023-01-21 08:30:00,2023-01-21 08:30:00
 10,加藤修平,kato@company.com,管理者,,有効,2023-01-22 09:30:00,2023-01-22 09:30:00
+11,松本和也,matsumoto@factory5.com,工場管理者,5,有効,2023-01-23 08:00:00,2023-01-23 08:00:00
