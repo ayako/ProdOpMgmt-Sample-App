@@ -5,14 +5,14 @@
 ## ファイル構成
 
 ### 基本エンティティ
-- **users.csv** - 担当者情報（10件）
+- **users.csv** - 担当者情報（11件）
 - **factories.csv** - 工場情報（5件）
 - **products.csv** - 製品情報（10件）
 
 ### トランザクションエンティティ
 - **production_adjustment_requests.csv** - 生産調整依頼（8件）
 - **factory_responses.csv** - 工場回答（7件）
-- **status_history.csv** - ステータス履歴（23件）
+- **status_history.csv** - ステータス履歴（27件）
 
 ## データの関係性
 
