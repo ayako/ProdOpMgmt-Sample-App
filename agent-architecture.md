@@ -41,6 +41,7 @@
 
 **機能**:
 - 生産調整依頼の受付・初期検証
+- **依頼ID（Request ID）の自動生成・付与**
 - 各専門エージェントへのタスク分散
 - プロセス進行状況の監視・制御
 - 例外処理・エラーハンドリング
@@ -61,6 +62,7 @@
 ```
 
 **判断ロジック**:
+- **依頼ID生成**: 一意な識別子の自動生成（例: REQ-2024-001234）
 - 優先度に基づくタスクスケジューリング
 - 工場選定結果の妥当性検証
 - 送信失敗時の再試行戦略
@@ -138,7 +140,9 @@ class CommunicationAgent:
         if channel == "email":
             return send_email(factory.contact_email, message)
         elif channel == "teams":
-            return send_teams_message(factory.teams_channel, message)
+            # Teams チャットタイトルにも依頼IDを含める
+            chat_title = f"[{request_data.request_id}] 生産調整依頼"
+            return send_teams_message(factory.teams_channel, message, chat_title)
     
     def track_delivery(self, message_id):
         return get_delivery_status(message_id)
@@ -146,7 +150,7 @@ class CommunicationAgent:
 
 **メッセージテンプレート**:
 ```
-件名: 【生産調整依頼】{product_name} {adjustment_type} {quantity}個
+件名: [{request_id}] 【生産調整依頼】{product_name} {adjustment_type} {quantity}個
 ---
 {factory_name} 御中
 
@@ -154,6 +158,7 @@ class CommunicationAgent:
 下記条件にて生産調整をお願いいたします。
 
 ■依頼内容
+・依頼ID: {request_id}
 ・製品名: {product_name}
 ・調整種別: {adjustment_type}
 ・依頼数量: {quantity}個
@@ -169,7 +174,7 @@ class CommunicationAgent:
 4. 追加コスト: ___円
 5. コメント: _______________
 
-返答期限までにご回答をお願いいたします。
+返答期限までに、件名に依頼ID「{request_id}」を含めてご回答をお願いいたします。
 ```
 
 ### 4. Response Processing Agent (回答処理エージェント)
@@ -182,7 +187,7 @@ def process_factory_response(message):
     # 1. メッセージの前処理
     cleaned_text = preprocess_message(message.content)
     
-    # 2. 依頼IDの特定
+    # 2. 依頼IDの特定（件名・チャットタイトルから抽出）
     request_id = extract_request_id(message.subject, message.content)
     
     # 3. 回答要素の抽出
@@ -205,6 +210,7 @@ def process_factory_response(message):
 ```
 
 **NLP処理技術**:
+- **依頼ID抽出**: 件名・チャットタイトルから依頼IDパターンの抽出
 - **キーワード抽出**: 「受諾」「拒否」「条件付き」等の決定語
 - **数値抽出**: 数量・金額・日付の正規表現パターン
 - **感情分析**: ポジティブ・ネガティブ判定
@@ -288,7 +294,7 @@ class TeamsBot(ActivityHandler):
     async def on_message_activity(self, turn_context: TurnContext):
         message_text = turn_context.activity.text
         
-        # 工場回答の判定
+        # 工場回答の判定（依頼IDの確認も含む）
         if self.is_factory_response(message_text):
             response_data = self.response_agent.process(message_text)
             await self.status_agent.update_status(response_data)
@@ -297,6 +303,11 @@ class TeamsBot(ActivityHandler):
             await turn_context.send_activity(
                 MessageFactory.text("回答を受信し、システムを更新しました。")
             )
+    
+    def create_production_request_chat(self, request_id, factory_info):
+        # チャットタイトルに依頼IDを含める
+        chat_title = f"[{request_id}] 生産調整依頼 - {factory_info.name}"
+        return self.create_chat(chat_title, factory_info.teams_members)
 ```
 
 ## セキュリティ・プライバシー考慮事項
