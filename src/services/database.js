@@ -154,6 +154,11 @@ class DatabaseService {
   }
 
   async update(tableName, id, data, idField = 'id') {
+    if (this.mockMode) {
+      console.log(`Mock update in ${tableName} with id:`, id, 'data:', data);
+      return { ...data, [idField]: id };
+    }
+    
     if (this.useCosmosDB) {
       const container = this.database.container(tableName);
       const { resource } = await container.item(id, id).replace(data);
@@ -175,6 +180,24 @@ class DatabaseService {
       const query = `UPDATE ${tableName} SET ${setClause} OUTPUT INSERTED.* WHERE ${idField} = @id`;
       const result = await request.query(query);
       return result.recordset[0];
+    }
+  }
+
+  async delete(tableName, id, idField = 'id') {
+    if (this.mockMode) {
+      console.log(`Mock delete in ${tableName} with id:`, id);
+      return { deleted: true };
+    }
+    
+    if (this.useCosmosDB) {
+      const container = this.database.container(tableName);
+      await container.item(id, id).delete();
+      return { deleted: true };
+    } else {
+      const request = this.sqlPool.request();
+      request.input('id', id);
+      await request.query(`DELETE FROM ${tableName} WHERE ${idField} = @id`);
+      return { deleted: true };
     }
   }
 
