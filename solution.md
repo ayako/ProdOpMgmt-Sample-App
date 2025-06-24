@@ -80,6 +80,7 @@
 - reason: 依頼理由
 - response_deadline: 返答期限
 - delivery_date: 納期
+- required_materials_inventory: 必須素材の在庫
 - status: ステータス
 - status_memo: 状況メモ
 - created_at: 作成日時
@@ -111,6 +112,7 @@
 - unit: 単位
 - standard_lead_time: 標準リードタイム
 - minimum_order_quantity: 最小発注数量
+- required_materials: 必須素材
 - description: 説明
 - status: ステータス (有効/無効)
 - created_at: 作成日時
