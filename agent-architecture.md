@@ -179,7 +179,7 @@ class CommunicationAgent:
 
 ### 4. Response Processing Agent (回答処理エージェント)
 
-**役割**: 工場回答の自動解析・構造化データ抽出
+**役割**: 工場回答の自動解析・構造化データ抽出（生成AI活用）
 
 **処理フロー**:
 ```python
@@ -190,36 +190,70 @@ def process_factory_response(message):
     # 2. 依頼IDの特定（件名・チャットタイトルから抽出）
     request_id = extract_request_id(message.subject, message.content)
     
-    # 3. 回答要素の抽出
-    response_data = {
-        "acceptance_status": extract_acceptance(cleaned_text),
-        "available_quantity": extract_quantity(cleaned_text),
-        "proposed_deadline": extract_date(cleaned_text),
-        "additional_cost": extract_cost(cleaned_text),
-        "comments": extract_comments(cleaned_text)
-    }
+    # 3. 生成AIによる回答要素の抽出
+    ai_prompt = create_extraction_prompt(cleaned_text, request_id)
+    response_data = ai_client.extract_structured_data(
+        prompt=ai_prompt,
+        schema={
+            "acceptance_status": "受諾|拒否|条件付き受諾",
+            "available_quantity": "number",
+            "proposed_deadline": "date",
+            "additional_cost": "number",
+            "comments": "string",
+            "reasoning": "string"
+        }
+    )
     
-    # 4. 信頼度スコアの算出
-    confidence_score = calculate_confidence(response_data)
+    # 4. 生成AIによる信頼度評価
+    confidence_analysis = ai_client.evaluate_confidence(
+        original_text=cleaned_text,
+        extracted_data=response_data
+    )
     
-    # 5. 低信頼度の場合は人間レビューへ
-    if confidence_score < 0.8:
-        return escalate_to_human(message, response_data)
+    # 5. 低信頼度または曖昧な回答の場合は人間レビューへ
+    if confidence_analysis.score < 0.8 or confidence_analysis.ambiguous:
+        return escalate_to_human(message, response_data, confidence_analysis)
     
     return response_data
 ```
 
-**NLP処理技術**:
+**生成AI処理技術**:
 - **依頼ID抽出**: 件名・チャットタイトルから依頼IDパターンの抽出
-- **キーワード抽出**: 「受諾」「拒否」「条件付き」等の決定語
-- **数値抽出**: 数量・金額・日付の正規表現パターン
-- **感情分析**: ポジティブ・ネガティブ判定
-- **信頼度評価**: 抽出結果の確信度測定
+- **自然言語理解**: 生成AIによる文脈理解と意図抽出
+- **構造化データ抽出**: スキーマ指定による自動データ抽出
+- **曖昧性解決**: 不明確な表現の意味推論
+- **多言語対応**: 日本語・英語混在文書の処理
+- **感情・ニュアンス分析**: 回答の積極性・消極性判定
+- **信頼度評価**: 抽出結果の確信度と根拠の提示
+
+**生成AIプロンプト設計**:
+```python
+def create_extraction_prompt(text, request_id):
+    return f"""
+以下の工場からの回答メッセージを分析し、構造化データとして抽出してください。
+
+依頼ID: {request_id}
+回答メッセージ:
+{text}
+
+抽出項目:
+1. 受諾状況（受諾/拒否/条件付き受諾）
+2. 対応可能数量（数値）
+3. 対応可能期限（日付）
+4. 追加コスト（金額）
+5. コメント・特記事項
+6. 抽出根拠・理由
+
+不明確な表現や曖昧な内容がある場合は、その旨を明記してください。
+"""
+```
 
 **エラーハンドリング**:
-- 曖昧な回答の人間エスカレーション
+- 生成AIの解釈結果の妥当性検証
 - 必須項目未回答の確認依頼送信
 - 矛盾データの検証・再確認
+- 生成AI処理失敗時の従来NLP手法へのフォールバック
+- 人間レビューが必要な複雑なケースの自動識別
 
 ### 5. Status Management Agent (ステータス管理エージェント)
 
@@ -262,6 +296,38 @@ def update_request_status(request_id, response_data):
 回答済み + 拒否回答 → 拒否
 回答済み + 条件付き受諾 → 確認中 (人間判断待ち)
 ```
+
+## 生成AI統合アーキテクチャ
+
+### AI処理エンジン統合
+
+**生成AIサービス統合**:
+```python
+class GenerativeAIClient:
+    def __init__(self):
+        self.ai_service = AIService(
+            model="gpt-4",
+            api_key=AI_API_KEY,
+            temperature=0.1  # 安定した抽出のため低温度設定
+        )
+    
+    def extract_structured_data(self, prompt, schema):
+        response = self.ai_service.complete(
+            prompt=prompt,
+            response_format="json",
+            schema=schema
+        )
+        return self.validate_response(response, schema)
+    
+    def evaluate_confidence(self, original_text, extracted_data):
+        confidence_prompt = self.create_confidence_prompt(original_text, extracted_data)
+        return self.ai_service.complete(confidence_prompt)
+```
+
+**フォールバック機構**:
+- 生成AI処理失敗時の従来NLP手法への自動切替
+- 処理時間制限による timeout 機能
+- API制限対応とリトライ戦略
 
 ## 通信統合アーキテクチャ
 
@@ -348,12 +414,13 @@ class TeamsBot(ActivityHandler):
 
 ### Phase 2: コア機能実装 (6週間)  
 - [ ] Factory Selection Agentアルゴリズム
-- [ ] Response Processing Agent (基本NLP)
+- [ ] Response Processing Agent (生成AI統合)
+- [ ] 生成AIサービス統合・プロンプト設計
 - [ ] Status Management Agent
 
 ### Phase 3: 高度機能・統合 (4週間)
 - [ ] Teams統合
-- [ ] 高度なNLP処理
+- [ ] 生成AI処理の最適化・プロンプトチューニング
 - [ ] 監視・アラート機能
 
 ### Phase 4: 運用最適化 (2週間)
@@ -369,8 +436,10 @@ class TeamsBot(ActivityHandler):
 - **ヒューマンエラー削減**: 入力ミス・送信忘れの撲滅
 
 ### 品質向上効果  
-- **工場選定精度向上**: データ駆動による最適化
-- **回答処理の標準化**: 人的判断のばらつき解消
+- **工場選定精度向上**: データ駌動による最適化
+- **回答処理の高精度化**: 生成AIによる自然言語理解の向上
+- **複雑な回答の対応**: 従来NLPでは困難な曖昧表現の解釈
 - **履歴・監査証跡**: 完全な処理記録の自動化
+- **多言語・方言対応**: 生成AIによる柔軟な言語処理
 
 この自動化アーキテクチャにより、生産調整プロセスの大幅な効率化と品質向上を実現します。
