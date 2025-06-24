@@ -1,0 +1,6 @@
+factory_id,factory_name,factory_code,location,contact_person,contact_email,contact_phone,production_capacity,specialities,status,created_at,updated_at
+1,東京製造工場,TKY001,東京都大田区,鈴木一郎,suzuki@factory1.com,03-1234-5678,5000,電子機器・精密機械,稼働中,2023-01-10 08:00:00,2023-01-10 08:00:00
+2,大阪生産センター,OSK001,大阪府堺市,高橋美咲,takahashi@factory2.com,06-2345-6789,8000,自動車部品・金属加工,稼働中,2023-01-10 08:30:00,2023-01-10 08:30:00
+3,名古屋工場,NGY001,愛知県名古屋市,伊藤健太,ito@factory3.com,052-3456-7890,6000,化学製品・プラスチック,稼働中,2023-01-10 09:00:00,2023-01-10 09:00:00
+4,横浜テクノセンター,YHM001,神奈川県横浜市,小林真理,kobayashi@factory4.com,045-4567-8901,4500,半導体・電子部品,稼働中,2023-01-10 09:30:00,2023-01-10 09:30:00
+5,福岡製造所,FKO001,福岡県福岡市,松本和也,matsumoto@factory5.com,092-5678-9012,3000,食品・医薬品,稼働中,2023-01-11 08:00:00,2023-01-11 08:00:00
