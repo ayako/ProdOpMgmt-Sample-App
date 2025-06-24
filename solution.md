@@ -20,7 +20,6 @@
   - 納期の設定
   - 優先度の設定
   - 工場の選択
-  - **必要素材の在庫状況確認**
 
 #### 1.2 工場への依頼送信
 - **システム機能**: 自動通知システム
@@ -32,20 +31,14 @@
   - 納期
   - 優先度
   - 理由・背景
-  - **必要素材リスト・在庫状況**
 
 #### 1.3 工場での確認・回答
 - **担当者**: 工場生産管理者
-- **確認内容**:
-  - 生産能力の確認
-  - **必要素材の在庫確認**
-  - **代用不可素材の可用性確認**
 - **回答内容**:
   - 受諾/拒否
   - 対応可能数量
   - 対応可能期限
   - 追加コスト
-  - **素材調達の必要性**
   - コメント
 
 #### 1.4 回答の承認・調整
@@ -162,48 +155,6 @@
 - changed_at: 変更日時
 ```
 
-#### 7. 素材 (Material)
-```
-- material_id (PK): 素材ID
-- material_name: 素材名
-- material_code: 素材コード
-- category: カテゴリ
-- unit: 単位
-- is_substitutable: 代用可能フラグ
-- supplier: 供給元
-- lead_time: 調達リードタイム
-- description: 説明
-- status: ステータス (有効/無効)
-- created_at: 作成日時
-- updated_at: 更新日時
-```
-
-#### 8. 製品素材 (ProductMaterial)
-```
-- product_material_id (PK): 製品素材ID
-- product_id (FK): 製品ID
-- material_id (FK): 素材ID
-- required_quantity: 必要数量
-- unit: 単位
-- is_critical: 重要素材フラグ
-- created_at: 作成日時
-- updated_at: 更新日時
-```
-
-#### 9. 素材在庫 (MaterialInventory)
-```
-- inventory_id (PK): 在庫ID
-- factory_id (FK): 工場ID
-- material_id (FK): 素材ID
-- current_stock: 現在庫数量
-- reserved_stock: 予約済み数量
-- available_stock: 利用可能数量
-- minimum_stock: 最小在庫数量
-- last_updated: 最終更新日時
-- created_at: 作成日時
-- updated_at: 更新日時
-```
-
 ### エンティティ関係図 (ER Diagram)
 
 ```
@@ -215,10 +166,6 @@ ProductionAdjustmentRequest ||--o{ StatusHistory : tracks
 User ||--o{ FactoryResponse : creates
 User ||--o{ StatusHistory : creates
 Factory ||--o{ User : employs
-Product ||--o{ ProductMaterial : requires
-Material ||--o{ ProductMaterial : used_in
-Factory ||--o{ MaterialInventory : stores
-Material ||--o{ MaterialInventory : tracked_as
 ```
 
 ## ステータス定義
@@ -254,25 +201,15 @@ Material ||--o{ MaterialInventory : tracked_as
 - 依頼送信時の自動通知
 - 期限アラート
 - ステータス変更通知
-- **素材在庫不足アラート**
 - レポート機能
 
-### 4. 素材管理機能
-- **素材マスターデータ管理**
-- **製品-素材関係の管理**
-- **工場別素材在庫管理**
-- **代用不可素材の特別管理**
-- **素材在庫状況の確認・更新**
-
-### 5. レポート・分析機能
+### 4. レポート・分析機能
 - 依頼状況レポート
 - 工場別パフォーマンス分析
 - 期限遵守率分析
 - 調整数量統計
-- **素材在庫状況レポート**
-- **素材調達予測分析**
 
-### 6. ユーザー管理機能
+### 5. ユーザー管理機能
 - ユーザー登録・認証
 - 役割・権限管理
 - ログイン履歴管理
