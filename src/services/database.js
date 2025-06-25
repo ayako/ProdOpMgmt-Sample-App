@@ -201,19 +201,6 @@ class DatabaseService {
     }
   }
 
-  async delete(tableName, id, idField = 'id') {
-    if (this.useCosmosDB) {
-      const container = this.database.container(tableName);
-      await container.item(id, id).delete();
-      return { deleted: true };
-    } else {
-      const request = this.sqlPool.request();
-      request.input('id', id);
-      await request.query(`DELETE FROM ${tableName} WHERE ${idField} = @id`);
-      return { deleted: true };
-    }
-  }
-
   async close() {
     if (this.sqlPool) {
       await this.sqlPool.close();
