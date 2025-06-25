@@ -30,6 +30,7 @@ async function initializeApp() {
         updateDashboard();
         updateRequestsTable();
         updateFactoriesList();
+        updateProductsList();
         
     } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -50,24 +51,38 @@ function setupEventListeners() {
     // New request button
     document.getElementById('new-request-btn').addEventListener('click', openNewRequestModal);
 
+    // New factory button
+    document.getElementById('new-factory-btn').addEventListener('click', openNewFactoryModal);
+    
+    // New product button
+    document.getElementById('new-product-btn').addEventListener('click', openNewProductModal);
+
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
     // Modal close buttons
     document.querySelector('.close').addEventListener('click', closeModal);
     
-    // Form submission
+    // Form submissions
     document.getElementById('request-form').addEventListener('submit', submitRequest);
+    document.getElementById('factory-form').addEventListener('submit', submitFactory);
+    document.getElementById('product-form').addEventListener('submit', submitProduct);
 
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
         const requestModal = document.getElementById('request-modal');
         const detailsModal = document.getElementById('request-details-modal');
+        const factoryModal = document.getElementById('factory-modal');
+        const productModal = document.getElementById('product-modal');
         
         if (e.target === requestModal) {
             closeModal();
         } else if (e.target === detailsModal) {
             closeDetailsModal();
+        } else if (e.target === factoryModal) {
+            closeFactoryModal();
+        } else if (e.target === productModal) {
+            closeProductModal();
         }
     });
 }
@@ -254,18 +269,58 @@ function updateFactoriesList() {
     const html = appState.factories.map(factory => `
         <div class="factory-card">
             <h3>${factory.factory_name}</h3>
+            <p><strong>コード:</strong> ${factory.factory_code}</p>
             <p><strong>所在地:</strong> ${factory.location || 'N/A'}</p>
             <p><strong>専門分野:</strong> ${factory.specialities || 'N/A'}</p>
             <p><strong>連絡先:</strong> ${factory.contact_email}</p>
+            <p><strong>生産能力:</strong> ${factory.production_capacity || 'N/A'}</p>
             <p><strong>ステータス:</strong> 
                 <span class="status-badge ${factory.status === 'active' ? 'status-approved' : 'status-rejected'}">
                     ${factory.status === 'active' ? '稼働中' : '停止中'}
                 </span>
             </p>
+            <div class="card-actions">
+                <button onclick="editFactory('${factory.factory_id}')" class="btn-secondary">編集</button>
+                <button onclick="deleteFactory('${factory.factory_id}')" class="btn-danger">削除</button>
+            </div>
         </div>
     `).join('');
 
     factoriesList.innerHTML = html;
+}
+
+// Product management functions
+function updateProductsList() {
+    const productsList = document.getElementById('products-list');
+    
+    if (appState.products.length === 0) {
+        productsList.innerHTML = '<p>製品データがありません</p>';
+        return;
+    }
+
+    const html = appState.products.map(product => `
+        <div class="product-card">
+            <h3>${product.product_name}</h3>
+            <p><strong>コード:</strong> ${product.product_code}</p>
+            <p><strong>カテゴリー:</strong> ${product.category}</p>
+            <p><strong>単位:</strong> ${product.unit || 'N/A'}</p>
+            <p><strong>リードタイム:</strong> ${product.standard_lead_time || 'N/A'} 日</p>
+            <p><strong>最小注文数量:</strong> ${product.minimum_order_quantity || 'N/A'}</p>
+            <p><strong>必要材料:</strong> ${product.required_materials || 'N/A'}</p>
+            <p><strong>説明:</strong> ${product.description || 'N/A'}</p>
+            <p><strong>ステータス:</strong> 
+                <span class="status-badge ${product.status === 'active' ? 'status-approved' : 'status-rejected'}">
+                    ${product.status === 'active' ? '有効' : '無効'}
+                </span>
+            </p>
+            <div class="card-actions">
+                <button onclick="editProduct('${product.product_id}')" class="btn-secondary">編集</button>
+                <button onclick="deleteProduct('${product.product_id}')" class="btn-danger">削除</button>
+            </div>
+        </div>
+    `).join('');
+
+    productsList.innerHTML = html;
 }
 
 // Modal functions
@@ -562,4 +617,172 @@ function generateTimelineReport(container) {
         </div>
     `;
     container.innerHTML = html;
+}
+
+// Factory modal functions
+function openNewFactoryModal() {
+    document.getElementById('factory-modal-title').textContent = '新規工場追加';
+    document.getElementById('factory-form').reset();
+    document.getElementById('factory-form').removeAttribute('data-factory-id');
+    document.getElementById('factory-modal').style.display = 'block';
+}
+
+function editFactory(factoryId) {
+    const factory = appState.factories.find(f => f.factory_id === factoryId);
+    if (!factory) return;
+    
+    document.getElementById('factory-modal-title').textContent = '工場編集';
+    document.getElementById('factory-form').setAttribute('data-factory-id', factoryId);
+    
+    // Populate form fields
+    document.getElementById('factory-name').value = factory.factory_name || '';
+    document.getElementById('factory-code').value = factory.factory_code || '';
+    document.getElementById('factory-location').value = factory.location || '';
+    document.getElementById('factory-contact-person').value = factory.contact_person || '';
+    document.getElementById('factory-contact-email').value = factory.contact_email || '';
+    document.getElementById('factory-contact-phone').value = factory.contact_phone || '';
+    document.getElementById('factory-production-capacity').value = factory.production_capacity || '';
+    document.getElementById('factory-specialities').value = factory.specialities || '';
+    document.getElementById('factory-status').value = factory.status || 'active';
+    
+    document.getElementById('factory-modal').style.display = 'block';
+}
+
+function closeFactoryModal() {
+    document.getElementById('factory-modal').style.display = 'none';
+    document.getElementById('factory-form').reset();
+}
+
+async function submitFactory(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const factoryData = Object.fromEntries(formData.entries());
+    const factoryId = e.target.getAttribute('data-factory-id');
+    
+    try {
+        let result;
+        if (factoryId) {
+            // Update existing factory
+            result = await apiCall(`/factories/${factoryId}`, {
+                method: 'PUT',
+                body: JSON.stringify(factoryData)
+            });
+        } else {
+            // Create new factory
+            result = await apiCall('/factories', {
+                method: 'POST',
+                body: JSON.stringify(factoryData)
+            });
+        }
+        
+        showSuccess(factoryId ? '工場を更新しました' : '新規工場を追加しました');
+        closeFactoryModal();
+        await loadFactories();
+        updateFactoriesList();
+    } catch (error) {
+        console.error('Error saving factory:', error);
+        showError('工場の保存に失敗しました');
+    }
+}
+
+async function deleteFactory(factoryId) {
+    if (!confirm('この工場を削除してもよろしいですか？')) return;
+    
+    try {
+        await apiCall(`/factories/${factoryId}`, {
+            method: 'DELETE'
+        });
+        
+        showSuccess('工場を削除しました');
+        await loadFactories();
+        updateFactoriesList();
+    } catch (error) {
+        console.error('Error deleting factory:', error);
+        showError('工場の削除に失敗しました');
+    }
+}
+
+// Product modal functions
+function openNewProductModal() {
+    document.getElementById('product-modal-title').textContent = '新規製品追加';
+    document.getElementById('product-form').reset();
+    document.getElementById('product-form').removeAttribute('data-product-id');
+    document.getElementById('product-modal').style.display = 'block';
+}
+
+function editProduct(productId) {
+    const product = appState.products.find(p => p.product_id === productId);
+    if (!product) return;
+    
+    document.getElementById('product-modal-title').textContent = '製品編集';
+    document.getElementById('product-form').setAttribute('data-product-id', productId);
+    
+    // Populate form fields
+    document.getElementById('product-name').value = product.product_name || '';
+    document.getElementById('product-code').value = product.product_code || '';
+    document.getElementById('product-category').value = product.category || '';
+    document.getElementById('product-unit').value = product.unit || '';
+    document.getElementById('product-lead-time').value = product.standard_lead_time || '';
+    document.getElementById('product-min-quantity').value = product.minimum_order_quantity || '';
+    document.getElementById('product-materials').value = product.required_materials || '';
+    document.getElementById('product-description').value = product.description || '';
+    document.getElementById('product-status').value = product.status || 'active';
+    
+    document.getElementById('product-modal').style.display = 'block';
+}
+
+function closeProductModal() {
+    document.getElementById('product-modal').style.display = 'none';
+    document.getElementById('product-form').reset();
+}
+
+async function submitProduct(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const productData = Object.fromEntries(formData.entries());
+    const productId = e.target.getAttribute('data-product-id');
+    
+    try {
+        let result;
+        if (productId) {
+            // Update existing product
+            result = await apiCall(`/products/${productId}`, {
+                method: 'PUT',
+                body: JSON.stringify(productData)
+            });
+        } else {
+            // Create new product
+            result = await apiCall('/products', {
+                method: 'POST',
+                body: JSON.stringify(productData)
+            });
+        }
+        
+        showSuccess(productId ? '製品を更新しました' : '新規製品を追加しました');
+        closeProductModal();
+        await loadProducts();
+        updateProductsList();
+    } catch (error) {
+        console.error('Error saving product:', error);
+        showError('製品の保存に失敗しました');
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('この製品を削除してもよろしいですか？')) return;
+    
+    try {
+        await apiCall(`/products/${productId}`, {
+            method: 'DELETE'
+        });
+        
+        showSuccess('製品を削除しました');
+        await loadProducts();
+        updateProductsList();
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        showError('製品の削除に失敗しました');
+    }
 }

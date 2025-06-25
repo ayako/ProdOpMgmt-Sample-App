@@ -14,6 +14,7 @@
                 <li><a href="#dashboard">ダッシュボード</a></li>
                 <li><a href="#requests">依頼管理</a></li>
                 <li><a href="#factories">工場管理</a></li>
+                <li><a href="#products">製品管理</a></li>
                 <li><a href="#reports">レポート</a></li>
             </ul>
         </nav>
@@ -63,7 +64,18 @@
 
         <section id="factories">
             <h2>工場管理</h2>
+            <div class="controls">
+                <button id="new-factory-btn" class="btn-primary">新規工場追加</button>
+            </div>
             <div id="factories-list"></div>
+        </section>
+
+        <section id="products">
+            <h2>製品管理</h2>
+            <div class="controls">
+                <button id="new-product-btn" class="btn-primary">新規製品追加</button>
+            </div>
+            <div id="products-list"></div>
         </section>
 
         <section id="reports">
@@ -147,6 +159,130 @@
             <div class="form-actions">
                 <button type="button" class="btn-secondary" onclick="closeDetailsModal()">閉じる</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal for factory create/edit -->
+    <div id="factory-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeFactoryModal()">&times;</span>
+            <h2 id="factory-modal-title">新規工場追加</h2>
+            <form id="factory-form">
+                <div class="form-group">
+                    <label for="factory-name">工場名 *:</label>
+                    <input type="text" id="factory-name" name="factory_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-code">工場コード *:</label>
+                    <input type="text" id="factory-code" name="factory_code" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-location">所在地:</label>
+                    <input type="text" id="factory-location" name="location">
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-contact-person">担当者:</label>
+                    <input type="text" id="factory-contact-person" name="contact_person">
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-contact-email">連絡先メール *:</label>
+                    <input type="email" id="factory-contact-email" name="contact_email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-contact-phone">電話番号:</label>
+                    <input type="tel" id="factory-contact-phone" name="contact_phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-production-capacity">生産能力:</label>
+                    <input type="number" id="factory-production-capacity" name="production_capacity">
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-specialities">専門分野:</label>
+                    <input type="text" id="factory-specialities" name="specialities" placeholder="例: 電子機器・精密機械">
+                </div>
+                
+                <div class="form-group">
+                    <label for="factory-status">ステータス:</label>
+                    <select id="factory-status" name="status">
+                        <option value="active">稼働中</option>
+                        <option value="inactive">停止中</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeFactoryModal()">キャンセル</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for product create/edit -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProductModal()">&times;</span>
+            <h2 id="product-modal-title">新規製品追加</h2>
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">製品名 *:</label>
+                    <input type="text" id="product-name" name="product_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-code">製品コード *:</label>
+                    <input type="text" id="product-code" name="product_code" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-category">カテゴリー *:</label>
+                    <input type="text" id="product-category" name="category" required placeholder="例: 電子機器アクセサリー">
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-unit">単位:</label>
+                    <input type="text" id="product-unit" name="unit" placeholder="例: 個, リットル">
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-lead-time">標準リードタイム (日):</label>
+                    <input type="number" id="product-lead-time" name="standard_lead_time">
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-min-quantity">最小注文数量:</label>
+                    <input type="number" id="product-min-quantity" name="minimum_order_quantity">
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-materials">必要材料:</label>
+                    <input type="text" id="product-materials" name="required_materials" placeholder="例: プラスチック・シリコン">
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-description">説明:</label>
+                    <textarea id="product-description" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-status">ステータス:</label>
+                    <select id="product-status" name="status">
+                        <option value="active">有効</option>
+                        <option value="inactive">無効</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeProductModal()">キャンセル</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
         </div>
     </div>
 
