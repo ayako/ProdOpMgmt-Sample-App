@@ -21,7 +21,7 @@ async function initializeDatabase() {
         await database.initialize();
         
         // Load data from CSV files
-        const dataDir = path.join(__dirname, '../data');
+        const dataDir = path.join(__dirname, '../database');
         
         // Load users
         console.log('Loading users...');

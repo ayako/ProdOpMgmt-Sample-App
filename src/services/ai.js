@@ -8,7 +8,7 @@ class AIService {
         process.env.OPENAI_ENDPOINT,
         new AzureKeyCredential(process.env.OPENAI_API_KEY)
       );
-      this.modelName = process.env.OPENAI_MODEL_NAME || 'gpt-4';
+      this.modelName = process.env.OPENAI_MODEL_NAME || 'gpt-4o-mini';
       this.configured = true;
     } else {
       console.log('Azure OpenAI not configured - using mock responses');

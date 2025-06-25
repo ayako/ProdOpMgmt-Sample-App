@@ -83,8 +83,12 @@ POMSolution/
 │   ├── index.html             # メイン UI
 │   ├── css/style.css          # スタイルシート
 │   └── js/app.js              # フロントエンド JavaScript
-├── database/                   # データベース
-│   └── schema.sql             # SQL スキーマ
+├── database/                   # データベースとサンプルデータ
+│   ├── schema.sql             # SQL スキーマ
+│   ├── users.csv              # ユーザーマスタ
+│   ├── factories.csv          # 工場マスタ
+│   ├── products.csv           # 製品マスタ
+│   └── ...                    # その他 CSV ファイル
 ├── deployment/                 # デプロイメント設定
 │   └── azure-setup.md         # Azure 設定手順
 ├── scripts/                    # ユーティリティスクリプト
@@ -92,15 +96,11 @@ POMSolution/
 ├── test/                       # テスト
 │   ├── app.test.js            # アプリケーションテスト
 │   └── setup.js               # テスト設定
-├── doc/                        # ドキュメント
-│   ├── solution.md            # 詳細設計書
-│   ├── agent-architecture.md  # エージェント設計書
-│   └── ui-design.md          # UI 設計書
-└── data/                       # サンプルデータ
-    ├── users.csv              # ユーザーマスタ
-    ├── factories.csv          # 工場マスタ
-    ├── products.csv           # 製品マスタ
-    └── ...                    # その他 CSV ファイル
+└── doc/                        # ドキュメント
+    ├── solution.md            # 詳細設計書
+    ├── agent-architecture.md  # エージェント設計書
+    ├── ui-design.md          # UI 設計書
+    └── readme_old.md         # 旧 README
 ```
 
 ## セットアップと起動
