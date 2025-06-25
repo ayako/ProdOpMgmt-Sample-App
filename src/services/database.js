@@ -1,5 +1,8 @@
 const sql = require('mssql');
 const { CosmosClient } = require('@azure/cosmos');
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parser');
 
 class DatabaseService {
   constructor() {
@@ -35,12 +38,14 @@ class DatabaseService {
       } else {
         console.log('Database not configured - using mock mode');
         this.mockMode = true;
+        await this.loadMockData();
       }
       console.log(`Database initialized: ${this.useCosmosDB ? 'CosmosDB' : this.mockMode ? 'Mock Mode' : 'SQL Server'}`);
     } catch (error) {
       console.error('Database initialization failed:', error);
       console.log('Falling back to mock mode');
       this.mockMode = true;
+      await this.loadMockData();
     }
   }
 
@@ -234,6 +239,129 @@ class DatabaseService {
     if (this.sqlPool) {
       await this.sqlPool.close();
     }
+  }
+
+  async loadCSVData(filePath) {
+    return new Promise((resolve, reject) => {
+      const results = [];
+      if (!fs.existsSync(filePath)) {
+        console.log(`CSV file not found: ${filePath}`);
+        resolve([]);
+        return;
+      }
+      
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => resolve(results))
+        .on('error', reject);
+    });
+  }
+
+  async loadMockData() {
+    try {
+      console.log('Loading sample data for mock mode...');
+      const dataDir = path.join(__dirname, '../../database');
+      
+      // Load users
+      const users = await this.loadCSVData(path.join(dataDir, 'users.csv'));
+      this.mockData['users'] = users;
+      
+      // Load factories  
+      const factories = await this.loadCSVData(path.join(dataDir, 'factories.csv'));
+      this.mockData['factories'] = factories;
+      
+      // Load products
+      const products = await this.loadCSVData(path.join(dataDir, 'products.csv'));
+      this.mockData['products'] = products;
+      
+      // Load production requests and convert Japanese status to English
+      const requests = await this.loadCSVData(path.join(dataDir, 'production_adjustment_requests.csv'));
+      const normalizedRequests = requests.map((request, index) => {
+        const normalized = {
+          ...request,
+          status: this.normalizeStatus(request.status),
+          adjustment_type: this.normalizeAdjustmentType(request.adjustment_type),
+          priority: this.normalizePriority(request.priority)
+        };
+        
+        // For demo purposes, make some entries have today's date to show dashboard values
+        const today = new Date().toISOString();
+        const todayDateOnly = new Date().toISOString().split('T')[0];
+        
+        // Make the first 2 'responded' requests updated today
+        if (normalized.status === 'responded' && index < 2) {
+          normalized.updated_at = today;
+        }
+        
+        // Make one request submitted today  
+        if (normalized.status === 'submitted') {
+          normalized.created_at = today;
+          normalized.updated_at = today;
+        }
+        
+        // Update response_deadline to make some overdue for demo
+        if (index === 0) {
+          // Make first request overdue
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          normalized.response_deadline = yesterday.toISOString();
+        }
+        
+        return normalized;
+      });
+      this.mockData['production_adjustment_requests'] = normalizedRequests;
+      
+      // Load factory responses  
+      const responses = await this.loadCSVData(path.join(dataDir, 'factory_responses.csv'));
+      this.mockData['factory_responses'] = responses;
+      
+      // Load status history
+      const statusHistory = await this.loadCSVData(path.join(dataDir, 'status_history.csv'));
+      this.mockData['status_history'] = statusHistory;
+      
+      console.log(`Mock data loaded: ${users.length} users, ${factories.length} factories, ${products.length} products, ${normalizedRequests.length} requests`);
+    } catch (error) {
+      console.error('Failed to load mock data:', error);
+      // Initialize empty structures so app doesn't crash
+      this.mockData = {
+        'users': [],
+        'factories': [],
+        'products': [],
+        'production_adjustment_requests': [],
+        'factory_responses': [],
+        'status_history': []
+      };
+    }
+  }
+
+  normalizeStatus(japaneseStatus) {
+    const statusMap = {
+      '送信済み': 'submitted',
+      '確認中': 'under_review', 
+      '回答済み': 'responded',
+      '承認済み': 'approved',
+      '拒否': 'rejected',
+      '完了': 'completed'
+    };
+    return statusMap[japaneseStatus] || japaneseStatus;
+  }
+
+  normalizeAdjustmentType(japaneseType) {
+    const typeMap = {
+      '増産': 'increase',
+      '減産': 'decrease'
+    };
+    return typeMap[japaneseType] || japaneseType;
+  }
+
+  normalizePriority(japanesePriority) {
+    const priorityMap = {
+      '高': 'high',
+      '中': 'medium', 
+      '低': 'low'
+    };
+    return priorityMap[japanesePriority] || japanesePriority;
   }
 }
 
