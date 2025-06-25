@@ -53,17 +53,21 @@ function setupEventListeners() {
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
-    // Modal close
+    // Modal close buttons
     document.querySelector('.close').addEventListener('click', closeModal);
     
     // Form submission
     document.getElementById('request-form').addEventListener('submit', submitRequest);
 
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     window.addEventListener('click', (e) => {
-        const modal = document.getElementById('request-modal');
-        if (e.target === modal) {
+        const requestModal = document.getElementById('request-modal');
+        const detailsModal = document.getElementById('request-details-modal');
+        
+        if (e.target === requestModal) {
             closeModal();
+        } else if (e.target === detailsModal) {
+            closeDetailsModal();
         }
     });
 }
@@ -174,8 +178,18 @@ function updateActivityList() {
 function updateRequestsTable() {
     const requestsTable = document.getElementById('requests-table');
     
-    if (appState.requests.length === 0) {
-        requestsTable.innerHTML = '<p>依頼がありません</p>';
+    // Get current filter value
+    const filterValue = document.getElementById('status-filter').value;
+    
+    // Apply filter if set
+    const displayRequests = filterValue ? 
+        appState.requests.filter(req => req.status === filterValue) : 
+        appState.requests;
+    
+    if (displayRequests.length === 0) {
+        requestsTable.innerHTML = filterValue ? 
+            '<p>選択されたステータスの依頼がありません</p>' : 
+            '<p>依頼がありません</p>';
         return;
     }
 
@@ -193,7 +207,7 @@ function updateRequestsTable() {
                 </tr>
             </thead>
             <tbody>
-                ${appState.requests.map(request => createRequestRow(request)).join('')}
+                ${displayRequests.map(request => createRequestRow(request)).join('')}
             </tbody>
         </table>
     `;
@@ -224,16 +238,8 @@ function createRequestRow(request) {
 }
 
 function filterRequests() {
-    const filterValue = document.getElementById('status-filter').value;
-    const filteredRequests = filterValue ? 
-        appState.requests.filter(req => req.status === filterValue) : 
-        appState.requests;
-    
-    // Temporarily update state for display
-    const originalRequests = appState.requests;
-    appState.requests = filteredRequests;
+    // Simply refresh the table - the filtering logic is now in updateRequestsTable()
     updateRequestsTable();
-    appState.requests = originalRequests;
 }
 
 // Factory management functions
@@ -332,6 +338,23 @@ function getStatusText(status) {
     return statusMap[status] || status;
 }
 
+function getPriorityText(priority) {
+    const priorityMap = {
+        'high': '高',
+        'medium': '中',
+        'low': '低'
+    };
+    return priorityMap[priority] || priority;
+}
+
+function getAdjustmentTypeText(adjustmentType) {
+    const typeMap = {
+        'increase': '増産',
+        'decrease': '減産'
+    };
+    return typeMap[adjustmentType] || adjustmentType;
+}
+
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -352,11 +375,107 @@ function showError(message) {
 }
 
 function viewRequest(requestId) {
-    // For MVP - simple alert with request details
     const request = appState.requests.find(r => r.request_id === requestId);
-    if (request) {
-        alert(`依頼詳細:\n${JSON.stringify(request, null, 2)}`);
+    if (!request) {
+        showError('依頼が見つかりません');
+        return;
     }
+
+    const factory = appState.factories.find(f => f.factory_id === request.factory_id);
+    const product = appState.products.find(p => p.product_id === request.product_id);
+    const user = appState.users.find(u => u.user_id === request.requester_id);
+
+    const factoryName = factory ? factory.factory_name : '不明な工場';
+    const productName = product ? product.product_name : '不明な製品';
+    const userName = user ? user.user_name : '不明なユーザー';
+    const statusText = getStatusText(request.status);
+    const priorityText = getPriorityText(request.priority);
+    const adjustmentTypeText = getAdjustmentTypeText(request.adjustment_type);
+
+    const detailsContent = `
+        <div class="request-details-grid">
+            <div class="detail-section">
+                <h3>基本情報</h3>
+                <div class="detail-row">
+                    <label>依頼ID:</label>
+                    <span>${request.request_id}</span>
+                </div>
+                <div class="detail-row">
+                    <label>依頼者:</label>
+                    <span>${userName}</span>
+                </div>
+                <div class="detail-row">
+                    <label>作成日時:</label>
+                    <span>${formatDate(request.created_at)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>更新日時:</label>
+                    <span>${formatDate(request.updated_at)}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>依頼内容</h3>
+                <div class="detail-row">
+                    <label>工場:</label>
+                    <span>${factoryName}</span>
+                </div>
+                <div class="detail-row">
+                    <label>製品:</label>
+                    <span>${productName}</span>
+                </div>
+                <div class="detail-row">
+                    <label>調整タイプ:</label>
+                    <span>${adjustmentTypeText}</span>
+                </div>
+                <div class="detail-row">
+                    <label>調整数量:</label>
+                    <span>${request.requested_quantity.toLocaleString()}</span>
+                </div>
+                <div class="detail-row">
+                    <label>優先度:</label>
+                    <span class="priority-${request.priority}">${priorityText}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>スケジュール</h3>
+                <div class="detail-row">
+                    <label>回答期限:</label>
+                    <span>${formatDate(request.response_deadline)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>納期:</label>
+                    <span>${formatDate(request.delivery_deadline)}</span>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>ステータス・理由</h3>
+                <div class="detail-row">
+                    <label>現在のステータス:</label>
+                    <span class="status-badge status-${request.status}">${statusText}</span>
+                </div>
+                <div class="detail-row">
+                    <label>理由:</label>
+                    <div class="reason-text">${request.reason || 'N/A'}</div>
+                </div>
+                ${request.factory_response ? `
+                <div class="detail-row">
+                    <label>工場回答:</label>
+                    <div class="response-text">${request.factory_response}</div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('request-details-content').innerHTML = detailsContent;
+    document.getElementById('request-details-modal').style.display = 'block';
+}
+
+function closeDetailsModal() {
+    document.getElementById('request-details-modal').style.display = 'none';
 }
 
 function generateReport(type) {

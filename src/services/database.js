@@ -19,6 +19,9 @@ class DatabaseService {
     this.database = null;
     this.sqlPool = null;
     
+    // Mock data store for when no real database is available
+    this.mockData = {};
+    
     // Determine which database to use based on environment
     this.useCosmosDB = process.env.COSMOS_ENDPOINT && process.env.COSMOS_KEY;
   }
@@ -83,7 +86,16 @@ class DatabaseService {
   async create(tableName, data) {
     if (this.mockMode) {
       console.log(`Mock create in ${tableName}:`, data);
-      return { ...data, id: 'MOCK_ID_' + Date.now() };
+      
+      // Initialize table if it doesn't exist
+      if (!this.mockData[tableName]) {
+        this.mockData[tableName] = [];
+      }
+      
+      // Add data to mock store
+      const item = { ...data, id: 'MOCK_ID_' + Date.now() };
+      this.mockData[tableName].push(item);
+      return item;
     }
     
     if (this.useCosmosDB) {
@@ -126,7 +138,24 @@ class DatabaseService {
   async findAll(tableName, conditions = {}) {
     if (this.mockMode) {
       console.log(`Mock findAll in ${tableName} with conditions:`, conditions);
-      return [];
+      
+      // Return empty array if table doesn't exist
+      if (!this.mockData[tableName]) {
+        return [];
+      }
+      
+      let results = this.mockData[tableName];
+      
+      // Apply conditions if any
+      if (Object.keys(conditions).length > 0) {
+        results = results.filter(item => {
+          return Object.keys(conditions).every(key => 
+            item[key] === conditions[key]
+          );
+        });
+      }
+      
+      return results;
     }
     
     if (this.useCosmosDB) {
