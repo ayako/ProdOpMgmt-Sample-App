@@ -57,9 +57,6 @@ function setupEventListeners() {
     // New product button
     document.getElementById('new-product-btn').addEventListener('click', openNewProductModal);
 
-    // Load sample data button
-    document.getElementById('load-sample-data-btn').addEventListener('click', loadSampleData);
-
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
@@ -185,38 +182,6 @@ async function loadProducts() {
 
 async function loadUsers() {
     appState.users = await apiCall('/users');
-}
-
-// Sample data loading function
-async function loadSampleData() {
-    try {
-        showSuccess('サンプルデータの読み込みを開始します...');
-        
-        // Call the load sample data endpoint
-        await apiCall('/load-sample-data', {
-            method: 'POST'
-        });
-        
-        // Reload all data after sample data is loaded
-        await Promise.all([
-            loadRequests(),
-            loadFactories(),
-            loadProducts(),
-            loadUsers()
-        ]);
-        
-        // Update all UI components
-        updateDashboard();
-        updateRequestsTable();
-        updateFactoriesList();
-        updateProductsList();
-        
-        showSuccess('サンプルデータが正常にロードされました');
-        
-    } catch (error) {
-        console.error('Failed to load sample data:', error);
-        showError('サンプルデータの読み込みに失敗しました: ' + error.message);
-    }
 }
 
 // Dashboard functions
