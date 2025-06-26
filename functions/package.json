@@ -1,0 +1,21 @@
+{
+  "name": "pom-solution-functions",
+  "version": "1.0.0",
+  "description": "Azure Functions for Production Operation Management Solution",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "@azure/functions": "^4.0.0",
+    "@azure/openai": "^1.0.0-beta.7",
+    "mssql": "^10.0.1",
+    "@azure/cosmos": "^4.0.0",
+    "nodemailer": "^6.9.7",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@azure/functions-core-tools": "^4.0.5455"
+  }
+}

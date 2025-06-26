@@ -1,172 +1,221 @@
 # Production Operation Management Solution
 
 ## 概要
+Azure サービスを活用した生産調整依頼管理システム。工場との生産数量調整をデジタル化し、自動化エージェントによる効率的な業務プロセスを実現します。
 
-Production Operation Management Solution（生産調整管理システム）は、製造業における生産数量の調整業務を効率化するためのソリューションです。委託先工場に対する生産調整依頼の作成・送信から、工場回答の管理、ステータス追跡まで、生産調整プロセス全体を統合的に管理します。
+## 実装されたシステム構成
+
+### Azure サービス
+- **ユーザーUI**: Azure App Service Web App (Linux, Node.js)
+- **エージェント**: Azure Functions (JavaScript)
+- **生成AI**: Azure OpenAI Services (GPT-4)
+- **データベース**: Azure SQL Server / Azure CosmosDB
+
+### アーキテクチャ概要
+```
+[ユーザー] ←→ [Web アプリ (Node.js)] ←→ [Azure Functions]
+                     ↓                      ↓
+             [Azure SQL/CosmosDB] ←→ [Azure OpenAI]
+```
 
 ## 主要機能
 
-### 🎯 生産調整計画
-- 増産・減産の依頼作成と送信
-- 工場選定と最適化
-- 優先度設定とスケジュール管理
-- 依頼理由と詳細条件の記録
+### 1. 生産調整依頼管理
+- 依頼の作成・編集・削除
+- ステータス管理（送信済み→確認中→回答済み→承認済み→完了）
+- 期限管理と自動通知
 
-### 📊 ステータス管理
-- リアルタイムでの調整状況追跡
-- 工場回答の自動受領・処理
-- ステータス変更履歴の管理
-- 期限アラートと通知機能
+### 2. 工場管理
+- 工場マスタ情報の管理
+- 生産能力と専門分野の管理
+- 工場別の依頼履歴
 
-### 🏭 工場管理
-- 工場情報と生産能力の管理
-- 専門分野による自動フィルタリング
-- 工場別パフォーマンス追跡
-- 連絡先と稼働状況管理
+### 3. 自動化エージェント
+- **調整エージェント**: 全体ワークフローの統括
+- **工場選定エージェント**: 最適な工場の自動選出
+- **応答処理エージェント**: AI による工場回答の自動解析
+- **ステータス管理エージェント**: 自動ステータス更新
 
-### 🔄 自動化機能
-- メール・Teams連携による自動通信
-- 工場選定アルゴリズム
-- 回答処理の自動化
-- ステータス更新の自動化
-
-## システム構成
-
-### アーキテクチャ
-```
-[ユーザー] ↔ [Webアプリケーション] ↔ [自動化エージェント] ↔ [外部通信]
-                      ↓                        ↓
-                [データベース]            [メール・Teams]
-```
-
-### 主要コンポーネント
-- **Coordination Agent**: 全体ワークフロー統括
-- **Factory Selection Agent**: 最適工場選定
-- **Communication Agent**: 外部通信管理
-- **Response Processing Agent**: 回答自動処理
-- **Status Management Agent**: ステータス管理
+### 4. AI機能
+- 工場からの回答メールの自動解析
+- 構造化データ抽出
+- 信頼度評価とフォールバック処理
 
 ## ワークフロー
 
-```mermaid
-flowchart TD
-    A[計画担当者] -->|依頼作成| B[生産調整依頼]
-    B -->|自動送信| C[工場確認]
-    C -->|回答| D[システム処理]
-    D -->|承認/条件変更| E[最終決定]
-    E -->|完了| F[生産調整実行]
-    
-    D -->|拒否/キャンセル| G[終了]
-    D -->|内容変更| B
+### 1. 生産調整依頼プロセス
+```
+[計画担当者] → [依頼作成] → [工場選定(AI)] → [工場通知] → [回答処理(AI)] → [承認] → [完了]
 ```
 
-## ステータス定義
-
-| ステータス | 説明 | 色分け |
-|-----------|------|--------|
-| 送信済み | 工場に依頼送信完了 | 青色 |
-| 確認中 | 工場で検討中 | オレンジ色 |
-| 回答済み | 工場から回答受領 | 紫色 |
-| 承認済み | 依頼内容承認完了 | 緑色 |
-| 完了 | 生産調整実行完了 | 濃緑色 |
-| 拒否 | 工場から拒否回答 | 赤色 |
-| キャンセル | 依頼キャンセル | グレー色 |
-
-## ユーザー役割
-
-### 👤 計画担当者
-- 生産調整依頼の作成・管理
-- 工場回答の承認・条件変更
-- 依頼ステータスの確認・更新
-
-### 🏭 工場管理者
-- 依頼内容の確認・検討
-- 受諾可否・条件回答
-- 生産状況の報告
-
-### 👨‍💼 管理者
-- システム全体の管理
-- ユーザー・工場・製品マスタ管理
-- レポート・分析機能
-
-## データモデル
-
-### 主要エンティティ
-- **ProductionAdjustmentRequest**: 生産調整依頼
-- **Factory**: 工場マスタ
-- **Product**: 製品マスタ
-- **User**: ユーザー管理
-- **FactoryResponse**: 工場回答
-- **StatusHistory**: ステータス履歴
-
-### リレーションシップ
+### 2. ステータス管理プロセス
 ```
-User ←→ ProductionAdjustmentRequest ←→ Factory
-          ↓
-       Product ← FactoryResponse
-          ↓
-    StatusHistory
+送信済み → 確認中 → 回答済み → 承認済み → 完了
+           ↓         ↓
+         期限切れ   拒否
 ```
-
-## 技術仕様
-
-### フロントエンド
-- レスポンシブWebアプリケーション
-- モダンブラウザ対応
-- アクセシビリティ準拠（WCAG 2.1 AA）
-
-### バックエンド
-- REST API アーキテクチャ
-- データベース統合
-- 外部API連携（メール・Teams）
-
-### セキュリティ
-- ユーザー認証・認可
-- データ暗号化
-- 監査ログ記録
-
-### パフォーマンス
-- 応答時間: 3秒以内
-- 同時利用: 100ユーザー
-- 稼働率: 99.5%以上
 
 ## ファイル構成
 
 ```
 POMSolution/
-├── readme.md                 # このファイル
-├── solution.md              # 詳細システム設計書
-├── ui-design.md             # UI設計仕様書
-├── agent-architecture.md    # 自動化エージェント設計書
-└── data/                    # サンプルデータ
-    ├── users.csv            # ユーザーマスタ
-    ├── factories.csv        # 工場マスタ
-    ├── products.csv         # 製品マスタ
-    ├── production_adjustment_requests.csv  # 生産調整依頼
-    ├── factory_responses.csv              # 工場回答
-    └── status_history.csv                 # ステータス履歴
+├── src/                          # Node.js Web アプリケーション
+│   ├── app.js                   # メインアプリケーション
+│   ├── models/                  # データモデル
+│   │   ├── ProductionRequest.js # 生産調整依頼
+│   │   ├── Factory.js          # 工場
+│   │   └── StatusHistory.js    # ステータス履歴
+│   ├── routes/                 # API ルート
+│   │   ├── requests.js         # 依頼管理 API
+│   │   ├── factories.js        # 工場管理 API
+│   │   ├── products.js         # 製品管理 API
+│   │   └── users.js            # ユーザー管理 API
+│   └── services/               # サービス層
+│       ├── database.js         # DB 抽象化レイヤー
+│       └── ai.js              # Azure OpenAI 統合
+├── functions/                  # Azure Functions
+│   ├── coordination-agent/     # 調整エージェント
+│   ├── factory-selection-agent/ # 工場選定エージェント
+│   ├── response-processing-agent/ # 応答処理エージェント
+│   ├── status-management-agent/ # ステータス管理エージェント
+│   └── shared/                 # 共通ライブラリ
+├── public/                     # フロントエンド
+│   ├── index.html             # メイン UI
+│   ├── css/style.css          # スタイルシート
+│   └── js/app.js              # フロントエンド JavaScript
+├── database/                   # データベースとサンプルデータ
+│   ├── schema.sql             # SQL スキーマ
+│   ├── users.csv              # ユーザーマスタ
+│   ├── factories.csv          # 工場マスタ
+│   ├── products.csv           # 製品マスタ
+│   └── ...                    # その他 CSV ファイル
+├── deployment/                 # デプロイメント設定
+│   └── azure-setup.md         # Azure 設定手順
+├── scripts/                    # ユーティリティスクリプト
+│   └── init-database.js       # DB 初期化
+├── test/                       # テスト
+│   ├── app.test.js            # アプリケーションテスト
+│   └── setup.js               # テスト設定
+└── doc/                        # ドキュメント
+    ├── solution.md            # 詳細設計書
+    ├── agent-architecture.md  # エージェント設計書
+    ├── ui-design.md          # UI 設計書
+    └── readme_old.md         # 旧 README
 ```
 
-## 期待効果
+## セットアップと起動
 
-### 効率化
-- 手動作業の80%削減
-- 処理時間の大幅短縮
-- ヒューマンエラーの撲滅
+### 1. 環境設定
+```bash
+# 依存関係のインストール
+npm install
 
-### 品質向上
-- データ駆動による最適化
-- 標準化されたプロセス
-- 完全な監査証跡
+# 環境変数の設定
+cp .env.example .env
+# .env ファイルを編集して Azure サービスの接続情報を設定
+```
 
-### 可視性向上
-- リアルタイムステータス確認
-- 包括的なレポート機能
-- 履歴・分析データの活用
+### 2. データベース初期化
+```bash
+# サンプルデータでデータベースを初期化
+npm run init-db
+```
+
+### 3. アプリケーション起動
+```bash
+# 開発モード
+npm run dev
+
+# 本番モード
+npm start
+```
+
+### 4. テスト実行
+```bash
+npm test
+```
+
+## API エンドポイント
+
+### 生産調整依頼
+- `GET /api/requests` - 依頼一覧取得
+- `POST /api/requests` - 新規依頼作成
+- `PUT /api/requests/:id` - 依頼更新
+- `POST /api/requests/:id/process-response` - AI による回答処理
+
+### 工場管理
+- `GET /api/factories` - 工場一覧取得
+- `POST /api/factories` - 工場新規作成
+- `PUT /api/factories/:id` - 工場情報更新
+
+### その他
+- `GET /health` - ヘルスチェック
+- `GET /api/users` - ユーザー一覧
+- `GET /api/products` - 製品一覧
+
+## 環境変数設定
+
+### 必須設定
+```bash
+# データベース (Azure SQL Server)
+DB_SERVER=your-azure-sql-server.database.windows.net
+DB_NAME=production_management
+DB_USER=your-username
+DB_PASSWORD=your-password
+
+# または Azure CosmosDB
+COSMOS_ENDPOINT=https://your-cosmos-account.documents.azure.com:443/
+COSMOS_KEY=your-cosmos-key
+
+# Azure OpenAI
+OPENAI_ENDPOINT=https://your-openai-service.openai.azure.com/
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL_NAME=gpt-4
+
+# Azure Functions
+FUNCTIONS_ENDPOINT=https://your-functions-app.azurewebsites.net
+FUNCTIONS_KEY=your-functions-key
+```
+
+## 特徴
+
+### 1. 環境対応
+- Azure SQL Server と Azure CosmosDB の両方をサポート
+- 環境変数による設定管理
+- 開発・テスト・本番環境での動作確認済み
+
+### 2. 高可用性設計
+- データベース接続エラー時の graceful degradation
+- AI サービス利用不可時のフォールバック処理
+- 自動リトライとエラーハンドリング
+
+### 3. セキュリティ
+- ヘルメット (Helmet) によるセキュリティヘッダー
+- レート制限機能
+- CORS 対応
+- 環境変数による機密情報管理
+
+### 4. 監視・ログ
+- 構造化ログ出力
+- ヘルスチェックエンドポイント
+- エラー追跡機能
+
+## デプロイメント
+
+詳細な Azure デプロイ手順は `deployment/azure-setup.md` を参照してください。
+
+## 今後の拡張
+
+- Microsoft Teams 統合
+- メール送受信機能
+- 高度な分析・レポート機能
+- モバイル対応
+- 多言語対応
 
 ---
 
 詳細な設計仕様については、以下のドキュメントを参照してください：
-- [システム設計書](solution.md)
-- [UI設計書](ui-design.md)
-- [自動化エージェント設計書](agent-architecture.md)
+- [システム設計書](doc/solution.md)
+- [UI設計書](doc/ui-design.md)
+- [自動化エージェント設計書](doc/agent-architecture.md)
+- [Azure デプロイメント手順](deployment/azure-setup.md)
