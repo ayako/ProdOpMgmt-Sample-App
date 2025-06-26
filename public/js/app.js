@@ -57,6 +57,9 @@ function setupEventListeners() {
     // New product button
     document.getElementById('new-product-btn').addEventListener('click', openNewProductModal);
 
+    // Load sample data button
+    document.getElementById('load-sample-data-btn').addEventListener('click', loadSampleData);
+
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
@@ -75,6 +78,26 @@ function setupEventListeners() {
                 break;
             case 'close-product-modal':
                 closeProductModal();
+                break;
+            case 'view-request':
+                const requestId = e.target.getAttribute('data-request-id');
+                if (requestId) viewRequest(requestId);
+                break;
+            case 'edit-factory':
+                const editFactoryId = e.target.getAttribute('data-factory-id');
+                if (editFactoryId) editFactory(editFactoryId);
+                break;
+            case 'delete-factory':
+                const deleteFactoryId = e.target.getAttribute('data-factory-id');
+                if (deleteFactoryId) deleteFactory(deleteFactoryId);
+                break;
+            case 'edit-product':
+                const editProductId = e.target.getAttribute('data-product-id');
+                if (editProductId) editProduct(editProductId);
+                break;
+            case 'delete-product':
+                const deleteProductId = e.target.getAttribute('data-product-id');
+                if (deleteProductId) deleteProduct(deleteProductId);
                 break;
         }
         
@@ -162,6 +185,38 @@ async function loadProducts() {
 
 async function loadUsers() {
     appState.users = await apiCall('/users');
+}
+
+// Sample data loading function
+async function loadSampleData() {
+    try {
+        showSuccess('サンプルデータの読み込みを開始します...');
+        
+        // Call the load sample data endpoint
+        await apiCall('/load-sample-data', {
+            method: 'POST'
+        });
+        
+        // Reload all data after sample data is loaded
+        await Promise.all([
+            loadRequests(),
+            loadFactories(),
+            loadProducts(),
+            loadUsers()
+        ]);
+        
+        // Update all UI components
+        updateDashboard();
+        updateRequestsTable();
+        updateFactoriesList();
+        updateProductsList();
+        
+        showSuccess('サンプルデータが正常にロードされました');
+        
+    } catch (error) {
+        console.error('Failed to load sample data:', error);
+        showError('サンプルデータの読み込みに失敗しました: ' + error.message);
+    }
 }
 
 // Dashboard functions
@@ -274,7 +329,7 @@ function createRequestRow(request) {
             <td><span class="status-badge status-${request.status}">${statusText}</span></td>
             <td>${formatDate(request.response_deadline)}</td>
             <td>
-                <button onclick="viewRequest('${request.request_id}')" class="btn-secondary">詳細</button>
+                <button data-action="view-request" data-request-id="${request.request_id}" class="btn-secondary">詳細</button>
             </td>
         </tr>
     `;
@@ -308,8 +363,8 @@ function updateFactoriesList() {
                 </span>
             </p>
             <div class="card-actions">
-                <button onclick="editFactory('${factory.factory_id}')" class="btn-secondary">編集</button>
-                <button onclick="deleteFactory('${factory.factory_id}')" class="btn-danger">削除</button>
+                <button data-action="edit-factory" data-factory-id="${factory.factory_id}" class="btn-secondary">編集</button>
+                <button data-action="delete-factory" data-factory-id="${factory.factory_id}" class="btn-danger">削除</button>
             </div>
         </div>
     `).join('');
@@ -342,8 +397,8 @@ function updateProductsList() {
                 </span>
             </p>
             <div class="card-actions">
-                <button onclick="editProduct('${product.product_id}')" class="btn-secondary">編集</button>
-                <button onclick="deleteProduct('${product.product_id}')" class="btn-danger">削除</button>
+                <button data-action="edit-product" data-product-id="${product.product_id}" class="btn-secondary">編集</button>
+                <button data-action="delete-product" data-product-id="${product.product_id}" class="btn-danger">削除</button>
             </div>
         </div>
     `).join('');
