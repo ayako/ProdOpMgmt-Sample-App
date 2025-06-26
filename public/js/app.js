@@ -60,8 +60,36 @@ function setupEventListeners() {
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
-    // Modal close buttons
-    document.querySelector('.close').addEventListener('click', closeModal);
+    // Modal close buttons and actions using event delegation
+    document.addEventListener('click', (e) => {
+        const action = e.target.getAttribute('data-action');
+        switch (action) {
+            case 'close-modal':
+                closeModal();
+                break;
+            case 'close-details-modal':
+                closeDetailsModal();
+                break;
+            case 'close-factory-modal':
+                closeFactoryModal();
+                break;
+            case 'close-product-modal':
+                closeProductModal();
+                break;
+        }
+        
+        // Handle report generation buttons
+        const reportType = e.target.getAttribute('data-report-type');
+        if (reportType) {
+            generateReport(reportType);
+        }
+    });
+
+    // Keep the original close button for compatibility (first one)
+    const firstCloseButton = document.querySelector('.close');
+    if (firstCloseButton && !firstCloseButton.hasAttribute('data-action')) {
+        firstCloseButton.addEventListener('click', closeModal);
+    }
     
     // Form submissions
     document.getElementById('request-form').addEventListener('submit', submitRequest);
