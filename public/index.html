@@ -81,9 +81,9 @@
         <section id="reports">
             <h2>レポート・分析</h2>
             <div class="report-options">
-                <button class="btn-secondary" onclick="generateReport('status')">ステータス別レポート</button>
-                <button class="btn-secondary" onclick="generateReport('factory')">工場別レポート</button>
-                <button class="btn-secondary" onclick="generateReport('timeline')">タイムラインレポート</button>
+                <button class="btn-secondary" data-report-type="status">ステータス別レポート</button>
+                <button class="btn-secondary" data-report-type="factory">工場別レポート</button>
+                <button class="btn-secondary" data-report-type="timeline">タイムラインレポート</button>
             </div>
             <div id="report-content"></div>
         </section>
@@ -143,7 +143,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal()">キャンセル</button>
+                    <button type="button" class="btn-secondary" data-action="close-modal">キャンセル</button>
                     <button type="submit" class="btn-primary">依頼作成</button>
                 </div>
             </form>
@@ -153,11 +153,11 @@
     <!-- Modal for request details -->
     <div id="request-details-modal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeDetailsModal()">&times;</span>
+            <span class="close" data-action="close-details-modal">&times;</span>
             <h2>依頼詳細</h2>
             <div id="request-details-content"></div>
             <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="closeDetailsModal()">閉じる</button>
+                <button type="button" class="btn-secondary" data-action="close-details-modal">閉じる</button>
             </div>
         </div>
     </div>
@@ -165,7 +165,7 @@
     <!-- Modal for factory create/edit -->
     <div id="factory-modal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeFactoryModal()">&times;</span>
+            <span class="close" data-action="close-factory-modal">&times;</span>
             <h2 id="factory-modal-title">新規工場追加</h2>
             <form id="factory-form">
                 <div class="form-group">
@@ -217,7 +217,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeFactoryModal()">キャンセル</button>
+                    <button type="button" class="btn-secondary" data-action="close-factory-modal">キャンセル</button>
                     <button type="submit" class="btn-primary">保存</button>
                 </div>
             </form>
@@ -227,7 +227,7 @@
     <!-- Modal for product create/edit -->
     <div id="product-modal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeProductModal()">&times;</span>
+            <span class="close" data-action="close-product-modal">&times;</span>
             <h2 id="product-modal-title">新規製品追加</h2>
             <form id="product-form">
                 <div class="form-group">
@@ -279,7 +279,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeProductModal()">キャンセル</button>
+                    <button type="button" class="btn-secondary" data-action="close-product-modal">キャンセル</button>
                     <button type="submit" class="btn-primary">保存</button>
                 </div>
             </form>

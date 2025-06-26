@@ -60,8 +60,56 @@ function setupEventListeners() {
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
 
-    // Modal close buttons
-    document.querySelector('.close').addEventListener('click', closeModal);
+    // Modal close buttons and actions using event delegation
+    document.addEventListener('click', (e) => {
+        const action = e.target.getAttribute('data-action');
+        switch (action) {
+            case 'close-modal':
+                closeModal();
+                break;
+            case 'close-details-modal':
+                closeDetailsModal();
+                break;
+            case 'close-factory-modal':
+                closeFactoryModal();
+                break;
+            case 'close-product-modal':
+                closeProductModal();
+                break;
+            case 'view-request':
+                const requestId = e.target.getAttribute('data-request-id');
+                if (requestId) viewRequest(requestId);
+                break;
+            case 'edit-factory':
+                const editFactoryId = e.target.getAttribute('data-factory-id');
+                if (editFactoryId) editFactory(editFactoryId);
+                break;
+            case 'delete-factory':
+                const deleteFactoryId = e.target.getAttribute('data-factory-id');
+                if (deleteFactoryId) deleteFactory(deleteFactoryId);
+                break;
+            case 'edit-product':
+                const editProductId = e.target.getAttribute('data-product-id');
+                if (editProductId) editProduct(editProductId);
+                break;
+            case 'delete-product':
+                const deleteProductId = e.target.getAttribute('data-product-id');
+                if (deleteProductId) deleteProduct(deleteProductId);
+                break;
+        }
+        
+        // Handle report generation buttons
+        const reportType = e.target.getAttribute('data-report-type');
+        if (reportType) {
+            generateReport(reportType);
+        }
+    });
+
+    // Keep the original close button for compatibility (first one)
+    const firstCloseButton = document.querySelector('.close');
+    if (firstCloseButton && !firstCloseButton.hasAttribute('data-action')) {
+        firstCloseButton.addEventListener('click', closeModal);
+    }
     
     // Form submissions
     document.getElementById('request-form').addEventListener('submit', submitRequest);
@@ -246,7 +294,7 @@ function createRequestRow(request) {
             <td><span class="status-badge status-${request.status}">${statusText}</span></td>
             <td>${formatDate(request.response_deadline)}</td>
             <td>
-                <button onclick="viewRequest('${request.request_id}')" class="btn-secondary">詳細</button>
+                <button data-action="view-request" data-request-id="${request.request_id}" class="btn-secondary">詳細</button>
             </td>
         </tr>
     `;
@@ -280,8 +328,8 @@ function updateFactoriesList() {
                 </span>
             </p>
             <div class="card-actions">
-                <button onclick="editFactory('${factory.factory_id}')" class="btn-secondary">編集</button>
-                <button onclick="deleteFactory('${factory.factory_id}')" class="btn-danger">削除</button>
+                <button data-action="edit-factory" data-factory-id="${factory.factory_id}" class="btn-secondary">編集</button>
+                <button data-action="delete-factory" data-factory-id="${factory.factory_id}" class="btn-danger">削除</button>
             </div>
         </div>
     `).join('');
@@ -314,8 +362,8 @@ function updateProductsList() {
                 </span>
             </p>
             <div class="card-actions">
-                <button onclick="editProduct('${product.product_id}')" class="btn-secondary">編集</button>
-                <button onclick="deleteProduct('${product.product_id}')" class="btn-danger">削除</button>
+                <button data-action="edit-product" data-product-id="${product.product_id}" class="btn-secondary">編集</button>
+                <button data-action="delete-product" data-product-id="${product.product_id}" class="btn-danger">削除</button>
             </div>
         </div>
     `).join('');

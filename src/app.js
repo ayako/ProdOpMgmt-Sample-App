@@ -42,19 +42,6 @@ app.use('/api/factories', require('./routes/factories'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/products', require('./routes/products'));
 
-// Load sample data endpoint
-app.post('/api/load-sample-data', async (req, res) => {
-  try {
-    // Load sample data by calling init-database script logic
-    const { loadSampleData } = require('../scripts/sample-data-loader');
-    await loadSampleData();
-    res.json({ success: true, message: 'Sample data loaded successfully' });
-  } catch (error) {
-    console.error('Failed to load sample data:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
