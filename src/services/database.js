@@ -267,9 +267,13 @@ class DatabaseService {
       const users = await this.loadCSVData(path.join(dataDir, 'users.csv'));
       this.mockData['users'] = users;
       
-      // Load factories  
+      // Load factories and normalize status
       const factories = await this.loadCSVData(path.join(dataDir, 'factories.csv'));
-      this.mockData['factories'] = factories;
+      const normalizedFactories = factories.map(factory => ({
+        ...factory,
+        status: this.normalizeFactoryStatus(factory.status)
+      }));
+      this.mockData['factories'] = normalizedFactories;
       
       // Load products
       const products = await this.loadCSVData(path.join(dataDir, 'products.csv'));
@@ -333,6 +337,14 @@ class DatabaseService {
         'status_history': []
       };
     }
+  }
+
+  normalizeFactoryStatus(japaneseStatus) {
+    const statusMap = {
+      '稼働中': 'active',
+      '停止中': 'inactive'
+    };
+    return statusMap[japaneseStatus] || japaneseStatus;
   }
 
   normalizeStatus(japaneseStatus) {
