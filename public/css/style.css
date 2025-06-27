@@ -473,3 +473,136 @@ tr:hover {
     border-color: #3498db;
     box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
 }
+
+/* Email Status Updates */
+.email-status-updates {
+    margin-top: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.email-status-updates h3 {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-status-item {
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background: #fafafa;
+}
+
+.email-status-item:last-child {
+    margin-bottom: 0;
+}
+
+.status-info {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.status-details {
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.status-details .progress {
+    background: #e8f5e8;
+    color: #2e7d32;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.status-details .confidence {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.btn-small {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s;
+}
+
+.btn-small:hover {
+    background-color: #2980b9;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.status-badge.in_progress {
+    background-color: #f39c12;
+}
+
+.status-badge.completed {
+    background-color: #27ae60;
+}
+
+.status-badge.delayed {
+    background-color: #e74c3c;
+}
+
+.status-badge.issue {
+    background-color: #8e44ad;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row label {
+    font-weight: bold;
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.detail-row span, .detail-row .email-body {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.email-body {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.email-details {
+    max-height: 70vh;
+    overflow-y: auto;
+}

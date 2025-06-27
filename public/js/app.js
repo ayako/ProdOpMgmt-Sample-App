@@ -23,7 +23,8 @@ async function initializeApp() {
             loadRequests(),
             loadFactories(),
             loadProducts(),
-            loadUsers()
+            loadUsers(),
+            loadEmailStatusUpdates()
         ]);
         
         // Update dashboard
@@ -31,6 +32,7 @@ async function initializeApp() {
         updateRequestsTable();
         updateFactoriesList();
         updateProductsList();
+        updateEmailStatusDisplay();
         
     } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -56,6 +58,17 @@ function setupEventListeners() {
     
     // New product button
     document.getElementById('new-product-btn').addEventListener('click', openNewProductModal);
+
+    // Process emails buttons
+    document.getElementById('process-emails-btn').addEventListener('click', processEmails);
+    document.getElementById('process-emails-btn2').addEventListener('click', processEmails);
+    
+    // Refresh status button
+    document.getElementById('refresh-status-btn').addEventListener('click', async () => {
+        await loadEmailStatusUpdates();
+        updateEmailStatusDisplay();
+        showSuccess('状況一覧を更新しました');
+    });
 
     // Status filter
     document.getElementById('status-filter').addEventListener('change', filterRequests);
@@ -144,6 +157,11 @@ function showSection(sectionId) {
     // Show selected section
     document.getElementById(sectionId).classList.add('active');
     appState.currentSection = sectionId;
+    
+    // Load section-specific data
+    if (sectionId === 'status-updates') {
+        loadEmailStatusUpdates().then(updateEmailStatusDisplay);
+    }
 }
 
 // API functions
@@ -833,4 +851,167 @@ async function deleteProduct(productId) {
         console.error('Error deleting product:', error);
         showError('製品の削除に失敗しました');
     }
+}
+
+// Email Status Updates functionality
+async function loadEmailStatusUpdates() {
+    try {
+        const updates = await apiCall('/emails/status-updates');
+        appState.emailStatusUpdates = updates;
+        return updates;
+    } catch (error) {
+        console.error('Error loading email status updates:', error);
+        return [];
+    }
+}
+
+async function processEmails() {
+    try {
+        showInfo('メールを処理中...');
+        const result = await apiCall('/emails/process-emails', {
+            method: 'POST'
+        });
+        
+        showSuccess(`${result.processed_count}件のメールを処理しました`);
+        
+        // Refresh status updates and dashboard
+        await loadEmailStatusUpdates();
+        updateEmailStatusDisplay();
+        updateDashboard();
+        
+    } catch (error) {
+        console.error('Error processing emails:', error);
+        showError('メール処理に失敗しました');
+    }
+}
+
+function updateEmailStatusDisplay() {
+    const emailStatusList = document.getElementById('email-status-list');
+    const statusUpdatesTable = document.getElementById('status-updates-table');
+    
+    if (!appState.emailStatusUpdates) return;
+    
+    // Update dashboard email status section
+    if (emailStatusList) {
+        const recentUpdates = appState.emailStatusUpdates.slice(0, 5);
+        emailStatusList.innerHTML = recentUpdates.length > 0 ? 
+            recentUpdates.map(update => `
+                <div class="email-status-item">
+                    <div class="status-info">
+                        <strong>${update.request_id}</strong> - ${update.status_update || '情報更新'}
+                    </div>
+                    <div class="status-details">
+                        <small>From: ${update.email_from} | ${formatDate(update.email_date)}</small>
+                        ${update.progress_percentage ? `<span class="progress">進捗: ${update.progress_percentage}%</span>` : ''}
+                        ${update.ai_confidence ? `<span class="confidence">信頼度: ${Math.round(update.ai_confidence * 100)}%</span>` : ''}
+                    </div>
+                </div>
+            `).join('') : '<p>メール状況更新はありません</p>';
+    }
+    
+    // Update full status updates table
+    if (statusUpdatesTable) {
+        statusUpdatesTable.innerHTML = appState.emailStatusUpdates.length > 0 ?
+            `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>依頼ID</th>
+                        <th>状況</th>
+                        <th>進捗</th>
+                        <th>送信者</th>
+                        <th>件名</th>
+                        <th>日時</th>
+                        <th>AI信頼度</th>
+                        <th>詳細</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${appState.emailStatusUpdates.map(update => `
+                        <tr>
+                            <td>${update.request_id}</td>
+                            <td><span class="status-badge ${update.status_update}">${getStatusUpdateLabel(update.status_update)}</span></td>
+                            <td>${update.progress_percentage ? update.progress_percentage + '%' : '-'}</td>
+                            <td>${update.email_from}</td>
+                            <td title="${update.email_subject}">${truncateText(update.email_subject, 30)}</td>
+                            <td>${formatDateTime(update.email_date)}</td>
+                            <td>${update.ai_confidence ? Math.round(update.ai_confidence * 100) + '%' : '-'}</td>
+                            <td><button class="btn-small" onclick="showEmailUpdateDetails('${update.update_id}')">詳細</button></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>` : '<p>メール状況更新はありません</p>';
+    }
+}
+
+function getStatusUpdateLabel(status) {
+    const labels = {
+        'in_progress': '進行中',
+        'completed': '完了',
+        'delayed': '遅延',
+        'issue': '問題'
+    };
+    return labels[status] || status || '不明';
+}
+
+function showEmailUpdateDetails(updateId) {
+    const update = appState.emailStatusUpdates.find(u => u.update_id === updateId);
+    if (!update) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>メール詳細</h2>
+            <div class="email-details">
+                <div class="detail-row">
+                    <label>依頼ID:</label>
+                    <span>${update.request_id}</span>
+                </div>
+                <div class="detail-row">
+                    <label>状況:</label>
+                    <span>${getStatusUpdateLabel(update.status_update)}</span>
+                </div>
+                <div class="detail-row">
+                    <label>進捗:</label>
+                    <span>${update.progress_percentage ? update.progress_percentage + '%' : 'なし'}</span>
+                </div>
+                <div class="detail-row">
+                    <label>完了予定:</label>
+                    <span>${update.completion_date || 'なし'}</span>
+                </div>
+                <div class="detail-row">
+                    <label>問題:</label>
+                    <span>${update.issues || 'なし'}</span>
+                </div>
+                <div class="detail-row">
+                    <label>追加情報:</label>
+                    <span>${update.additional_info || 'なし'}</span>
+                </div>
+                <div class="detail-row">
+                    <label>送信者:</label>
+                    <span>${update.email_from}</span>
+                </div>
+                <div class="detail-row">
+                    <label>件名:</label>
+                    <span>${update.email_subject}</span>
+                </div>
+                <div class="detail-row">
+                    <label>本文:</label>
+                    <div class="email-body">${update.email_body.replace(/\n/g, '<br>')}</div>
+                </div>
+                <div class="detail-row">
+                    <label>AI信頼度:</label>
+                    <span>${update.ai_confidence ? Math.round(update.ai_confidence * 100) + '%' : 'なし'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 }
