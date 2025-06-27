@@ -79,7 +79,8 @@ class DatabaseService {
       { id: 'products', partitionKey: '/product_id' },
       { id: 'production_requests', partitionKey: '/request_id' },
       { id: 'factory_responses', partitionKey: '/request_id' },
-      { id: 'status_history', partitionKey: '/request_id' }
+      { id: 'status_history', partitionKey: '/request_id' },
+      { id: 'email_status_updates', partitionKey: '/request_id' }
     ];
 
     for (const containerDef of containers) {
@@ -334,7 +335,8 @@ class DatabaseService {
         'products': [],
         'production_adjustment_requests': [],
         'factory_responses': [],
-        'status_history': []
+        'status_history': [],
+        'email_status_updates': []
       };
     }
   }

@@ -41,6 +41,7 @@ app.use('/api/requests', require('./routes/requests'));
 app.use('/api/factories', require('./routes/factories'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/products', require('./routes/products'));
+app.use('/api/emails', require('./routes/emails'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

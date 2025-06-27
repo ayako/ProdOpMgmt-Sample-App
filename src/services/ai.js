@@ -157,6 +157,40 @@ class AIService {
       };
     }
   }
+
+  // New method for processing email status updates
+  async processEmailStatusUpdate(emailContent, subject) {
+    const schema = {
+      request_id: 'string',
+      status_update: 'string', // 'in_progress', 'completed', 'delayed', 'issue'
+      progress_percentage: 'number',
+      completion_date: 'string',
+      issues: 'string',
+      additional_info: 'string'
+    };
+
+    try {
+      const fullText = `件名: ${subject}\n\n本文: ${emailContent}`;
+      const extractedData = await this.extractStructuredData(fullText, schema);
+      const confidence = await this.evaluateConfidence(fullText, extractedData);
+
+      return {
+        data: extractedData,
+        confidence: confidence,
+        originalText: fullText,
+        processingTimestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Email status update processing failed:', error);
+      return {
+        data: null,
+        confidence: 0,
+        originalText: `件名: ${subject}\n\n本文: ${emailContent}`,
+        error: error.message,
+        processingTimestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 module.exports = new AIService();

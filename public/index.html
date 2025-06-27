@@ -13,6 +13,7 @@
             <ul>
                 <li><a href="#dashboard">ダッシュボード</a></li>
                 <li><a href="#requests">依頼管理</a></li>
+                <li><a href="#status-updates">状況一覧</a></li>
                 <li><a href="#factories">工場管理</a></li>
                 <li><a href="#products">製品管理</a></li>
                 <li><a href="#reports">レポート</a></li>
@@ -42,6 +43,11 @@
                 <h3>最近の活動</h3>
                 <div id="activity-list"></div>
             </div>
+
+            <div class="email-status-updates">
+                <h3>メール状況更新 <button id="process-emails-btn" class="btn-small">メール処理実行</button></h3>
+                <div id="email-status-list"></div>
+            </div>
         </section>
 
         <section id="requests">
@@ -60,6 +66,16 @@
             </div>
             
             <div id="requests-table"></div>
+        </section>
+
+        <section id="status-updates">
+            <h2>状況一覧</h2>
+            <div class="controls">
+                <button id="refresh-status-btn" class="btn-secondary">更新</button>
+                <button id="process-emails-btn2" class="btn-primary">メール処理実行</button>
+            </div>
+            
+            <div id="status-updates-table"></div>
         </section>
 
         <section id="factories">
